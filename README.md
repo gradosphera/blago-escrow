@@ -1,6 +1,6 @@
 # Эскроу контракт Благо
 
-Адрес (контракта)[https://tonviewer.com/EQChQhurvpWiOeoX2YQOIyNQdqvBgalSQR6z9zD8sgRXr03b?section=code]
+Адрес [контракта](https://tonviewer.com/EQChQhurvpWiOeoX2YQOIyNQdqvBgalSQR6z9zD8sgRXr03b?section=code)
 
 Контракт реализует безопасную систему эскроу-платежей, позволяющую осуществлять переводы между пользователями Telegram.
 
