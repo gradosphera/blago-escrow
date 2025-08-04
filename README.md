@@ -31,7 +31,7 @@
 - sudoer:MsgAddress
 - usdt_jetton_wallet:MsgAddress
 - blago_jetton_wallet:MsgAddress
-- checks_dict:HashmapE(32, CheckData)
+- checks_dict:HashmapE(ID_SIZE, CheckData)
 
 CheckData:
 
@@ -40,10 +40,8 @@ CheckData:
 - jetton_wallet_address:^Cell
 - is_tiny_jetton:int1
 - with_username:int1
-- chat_instance:int64 (когда with_username = 0)
-- username:^Cell (когда with_username = -1)
+- chat_or_username:^Cell
 - comment:^Cell
-- status:int8
 - created_at:int32
 - sender_address:^Cell
 

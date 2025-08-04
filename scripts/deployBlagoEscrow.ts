@@ -1,8 +1,11 @@
 import { Address, toNano } from '@ton/core';
-import { BlagoEscrow, createDefaultBlagoEscrowConfig } from '../wrappers/BlagoEscrow';
+import { createDefaultBlagoEscrowConfig, BlagoEscrow } from '../wrappers/BlagoEscrow';
 import { compile, NetworkProvider } from '@ton/blueprint';
 import { OpenedContract } from '@ton/core/dist/contract/openContract';
 import { JettonMaster } from '@ton/ton';
+
+const INSTANCE_ID = Number(process.env.INSTANCE_ID) || 1;
+console.log('Instance ID:', INSTANCE_ID);
 
 // Authorized jetton master addresses
 export const JETTON_MASTERS = {
@@ -16,9 +19,11 @@ export async function run(provider: NetworkProvider) {
     if (!sudoerAddress) {
         throw new Error('Deployer address is required');
     }
-
     const blagoEscrow = provider.open(
-        BlagoEscrow.createFromConfig(createDefaultBlagoEscrowConfig(sudoerAddress), await compile('BlagoEscrow')),
+        BlagoEscrow.createFromConfig(
+            createDefaultBlagoEscrowConfig(INSTANCE_ID, sudoerAddress),
+            await compile('BlagoEscrow'),
+        ),
     );
 
     await blagoEscrow.sendDeploy(provider.sender(), toNano('0.05'));
