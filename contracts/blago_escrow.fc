@@ -83,9 +83,8 @@ const slice DEFAULT_COMMENT = "via @blago";
   slice charset = get_b64_alphabet();
   slice binary_slice = binary_data.end_cell().begin_parse();
 
-  ;; Process all chunks in one loop without extra variables
-  while (binary_slice.slice_bits() >= 24) {
-    ;; Load 24 bits at once instead of 3 separate loads
+  repeat(binary_slice.slice_bits() / 24) {
+
     int combined = binary_slice~load_uint(24);
 
     encoded_result = encoded_result
@@ -98,9 +97,10 @@ const slice DEFAULT_COMMENT = "via @blago";
   return encoded_result;
 }
 
-(slice) create_verification_message(slice auth_date, slice chat_instance_or_username, int with_username, slice receiver_address) inline {
-  (_, int receiver_address_hash) = receiver_address.parse_std_addr();
-  builder head = begin_cell().store_uint((receiver_address_hash >> (256 - HEAD_SIZE)), HEAD_SIZE);
+(slice) create_verification_message(int check_id, slice auth_date, slice chat_instance_or_username, int with_username, int receiver_address_hash) inline {
+  slice combined = begin_cell().store_uint(check_id, 32).store_uint(receiver_address_hash, 256).end_cell().begin_parse();
+  int receiver_address_hash_sha256 = string_hash(combined);
+  builder head = begin_cell().store_uint((receiver_address_hash_sha256 >> (256 - HEAD_SIZE)), HEAD_SIZE);
   builder head_base64 = encode_to_base64url(head);
 
   builder message = begin_cell()
@@ -500,7 +500,7 @@ const slice DEFAULT_COMMENT = "via @blago";
     throw_if(ERROR_INVALID_FORWARD_PAYLOAD, forward_payload.slice_bits() < 65);
 
     int forward_op = forward_payload~load_uint(32);
-    throw_if(ERROR_INVALID_FORWARD_OPERATION, forward_op != op::create_check);   
+    throw_if(ERROR_INVALID_FORWARD_OPERATION, forward_op != op::create_check);
 
     ;; Parse check creation parameters from forward payload
     int check_id = forward_payload~load_uint(32);
@@ -527,12 +527,12 @@ const slice DEFAULT_COMMENT = "via @blago";
 
 ;; Get method to retrieve check information
 ;; @param check_id ID of the check to retrieve
-;; @returns (amount, jetton_wallet_address_cell, with_username, chat_instance, username_cell, comment_cell, status, created_at)
+;; @returns (amount, jetton_wallet_address_cell, with_username, chat_instance, username_cell, comment_cell, status, created_at, sender_address)
 (int, cell, int, int, cell, cell, int, int) get_check_info(int check_id) method_id {
   (int exists, slice check_slice) = load_check(check_id);
   throw_unless(ERROR_CHECK_NOT_FOUND, exists);
 
-  (int amount, _, cell jetton_wallet_address_cell, _, int with_username, int chat_instance, cell username, cell comment, int status, int created_at, _) = deserialize_check(check_slice);
+  (int amount, _, cell jetton_wallet_address_cell, _, int with_username, int chat_instance, cell username, cell comment, int status, int created_at, cell sender_address) = deserialize_check(check_slice);
 
-  return (amount, jetton_wallet_address_cell, with_username, chat_instance, username, comment, status, created_at);
+  return (amount, jetton_wallet_address_cell, with_username, chat_instance, username, comment, status, created_at, sender_address);
 }
